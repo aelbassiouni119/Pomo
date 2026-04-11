@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  .setting-row {
+    padding: 18px 20px; border-bottom: 1px solid var(--line);
+    animation: fadeUp 0.4s ease both;
+    animation-delay: calc(var(--i, 0) * 50ms + 60ms);
+  }
+  .setting-label {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 10px;
+  }
+  .setting-name {
+    font-size: 14px; font-weight: 700; color: var(--text-1);
+  }
+  .setting-value {
+    font-family: var(--font-mono); font-size: 13px;
+    font-weight: 700; color: var(--session);
+  }
+  .setting-desc {
+    font-size: 11px; color: var(--text-3); margin-top: 3px; font-weight: 500;
+  }
+  .toggle-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px; border-bottom: 1px solid var(--line);
+    animation: fadeUp 0.4s ease both;
+  }
+  .toggle-info .toggle-name {
+    font-size: 14px; font-weight: 700; color: var(--text-1);
+  }
+  .toggle-info .toggle-desc {
+    font-size: 11px; color: var(--text-3); margin-top: 2px;
+  }
+</style>
+
+<div class="page-header" style="animation:fadeUp 0.4s ease both;">
+  <h1>Settings</h1>
+</div>
+
+<form id="settings-form">
+
+  <div class="section-label">Timer durations</div>
+
+  <div class="setting-row" style="--i:0;">
+    <div class="setting-label">
+      <div>
+        <div class="setting-name">Work session</div>
+        <div class="setting-desc">Focus time per pomodoro</div>
+      </div>
+      <span class="setting-value" id="val-work">{{ settings.work_duration // 60 }}m</span>
+    </div>
+    <input type="range" min="5" max="60" step="5"
+           value="{{ settings.work_duration // 60 }}"
+           id="work-duration"
+           oninput="document.getElementById('val-work').textContent=this.value+'m'"/>
+  </div>
+
+  <div class="setting-row" style="--i:1;">
+    <div class="setting-label">
+      <div>
+        <div class="setting-name">Short break</div>
+        <div class="setting-desc">Break between pomodoros</div>
+      </div>
+      <span class="setting-value" id="val-short">{{ settings.short_break // 60 }}m</span>
+    </div>
+    <input type="range" min="1" max="15" step="1"
+           value="{{ settings.short_break // 60 }}"
+           id="short-break"
+           oninput="document.getElementById('val-short').textContent=this.value+'m'"/>
+  </div>
+
+  <div class="setting-row" style="--i:2;">
+    <div class="setting-label">
+      <div>
+        <div class="setting-name">Long break</div>
+        <div class="setting-desc">After completing a full cycle</div>
+      </div>
+      <span class="setting-value" id="val-long">{{ settings.long_break // 60 }}m</span>
+    </div>
+    <input type="range" min="10" max="30" step="5"
+           value="{{ settings.long_break // 60 }}"
+           id="long-break"
+           oninput="document.getElementById('val-long').textContent=this.value+'m'"/>
+  </div>
+
+  <div class="setting-row" style="--i:3;">
+    <div class="setting-label">
+      <div>
+        <div class="setting-name">Cycles before long break</div>
+        <div class="setting-desc">Pomodoros per cycle</div>
+      </div>
+      <span class="setting-value" id="val-interval">{{ settings.long_break_interval }}</span>
+    </div>
+    <input type="range" min="2" max="6" step="1"
+           value="{{ settings.long_break_interval }}"
+           id="long-break-interval"
+           oninput="document.getElementById('val-interval').textContent=this.value"/>
+  </div>
+
+  <div class="section-label">Automation</div>
+
+  <div class="toggle-row" style="--i:4;animation-delay:200ms;">
+    <div class="toggle-info">
+      <div class="toggle-name">Auto-start breaks</div>
+      <div class="toggle-desc">Begin break automatically on session end</div>
+    </div>
+    <label class="toggle">
+      <input type="checkbox" id="auto-start-breaks"
+             {% if settings.auto_start_breaks %}checked{% endif %}/>
+      <span class="toggle-track"></span>
+    </label>
+  </div>
+
+  <div class="toggle-row" style="--i:5;animation-delay:250ms;">
+    <div class="toggle-info">
+      <div class="toggle-name">Auto-start work</div>
+      <div class="toggle-desc">Resume timer automatically after break</div>
+    </div>
+    <label class="toggle">
+      <input type="checkbox" id="auto-start-work"
+             {% if settings.auto_start_work %}checked{% endif %}/>
+      <span class="toggle-track"></span>
+    </label>
+  </div>
+
+  <div class="section-label">Notifications</div>
+
+  <div class="toggle-row" style="--i:6;animation-delay:300ms;">
+    <div class="toggle-info">
+      <div class="toggle-name">Sound</div>
+      <div class="toggle-desc">Bell tone on session complete</div>
+    </div>
+    <label class="toggle">
+      <input type="checkbox" id="sound-enabled"
+             {% if settings.sound_enabled %}checked{% endif %}/>
+      <span class="toggle-track"></span>
+    </label>
+  </div>
+
+  <div class="toggle-row" style="--i:7;animation-delay:350ms;">
+    <div class="toggle-info">
+      <div class="toggle-name">Notifications</div>
+      <div class="toggle-desc">Browser alerts when timer ends</div>
+    </div>
+    <label class="toggle">
+      <input type="checkbox" id="notification-enabled"
+             {% if settings.notification_enabled %}checked{% endif %}/>
+      <span class="toggle-track"></span>
+    </label>
+  </div>
+
+  <div style="padding:24px 20px;animation:fadeUp 0.4s ease 0.3s both;">
+    <button type="submit" class="btn">Save settings</button>
+    <div id="save-status" style="text-align:center;margin-top:12px;
+      font-size:12px;color:var(--green);font-weight:600;opacity:0;
+      transition:opacity 0.3s;">Saved ✓</div>
+  </div>
+
+</form>
+
+<div style="height:20px;"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('settings-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const data = {
+    work_duration:       parseInt(document.getElementById('work-duration').value) * 60,
+    short_break:         parseInt(document.getElementById('short-break').value) * 60,
+    long_break:          parseInt(document.getElementById('long-break').value) * 60,
+    long_break_interval: parseInt(document.getElementById('long-break-interval').value),
+    auto_start_breaks:   document.getElementById('auto-start-breaks').checked,
+    auto_start_work:     document.getElementById('auto-start-work').checked,
+    sound_enabled:       document.getElementById('sound-enabled').checked,
+    notification_enabled: document.getElementById('notification-enabled').checked,
+  };
+  try {
+    await fetch('/api/settings', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(data),
+    });
+    const status = document.getElementById('save-status');
+    status.style.opacity = '1';
+    setTimeout(() => status.style.opacity = '0', 2500);
+
+    // Request notification permission if enabled
+    if (data.notification_enabled && 'Notification' in window
+        && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  } catch (err) {
+    alert('Failed to save settings. Are you offline?');
+  }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  .task-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 0; border-bottom: 1px solid var(--line);
+    animation: fadeUp 0.4s ease both;
+    animation-delay: calc(var(--i, 0) * 45ms + 80ms);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .task-check {
+    width: 22px; height: 22px; border-radius: 6px;
+    border: 2px solid var(--line-bright); flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: border-color 0.2s, background 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .task-check:hover { border-color: var(--session); }
+  .task-title {
+    flex: 1; font-size: 15px; font-weight: 600; color: var(--text-1);
+    word-break: break-word; line-height: 1.4;
+  }
+  .pomodoro-badge {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    color: var(--session); background: var(--session-dim);
+    padding: 3px 8px; border-radius: 99px; flex-shrink: 0;
+  }
+  .task-del {
+    background: none; border: none; cursor: pointer;
+    color: var(--text-3); padding: 6px;
+    transition: color 0.2s; flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .task-del:hover { color: var(--red); }
+
+  /* Add form */
+  .add-form {
+    display: flex; gap: 10px; padding: 0 20px; margin-bottom: 4px;
+    position: sticky; top: 0; z-index: 10;
+    background: var(--bg); padding-top: max(56px, calc(env(safe-area-inset-top) + 48px));
+    padding-bottom: 12px; border-bottom: 1px solid var(--line);
+  }
+  .add-form input {
+    flex: 1; background: var(--layer2); border: 1px solid var(--line);
+    color: var(--text-1); border-radius: var(--r-sm);
+    padding: 12px 16px; font-size: 15px; font-family: var(--font-ui);
+    outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .add-form input:focus {
+    border-color: var(--session);
+    box-shadow: 0 0 0 3px var(--session-dim);
+  }
+  .add-form input::placeholder { color: var(--text-3); }
+  .add-form button {
+    background: var(--session); border: none; color: #fff;
+    border-radius: var(--r-sm); padding: 12px 18px;
+    font-size: 13px; font-weight: 700; font-family: var(--font-ui);
+    letter-spacing: 0.06em; text-transform: uppercase;
+    cursor: pointer; flex-shrink: 0;
+    transition: opacity 0.15s, transform 0.12s;
+    -webkit-tap-highlight-color: transparent;
+    box-shadow: 0 0 16px var(--session-dim);
+  }
+  .add-form button:active { opacity: 0.85; transform: scale(0.96); }
+
+  /* Done section */
+  .done-header {
+    display: flex; align-items: center; gap: 8px;
+    padding: 20px 20px 10px; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .done-header span {
+    font-size: 9px; font-weight: 700; letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--text-3);
+  }
+  .done-header .count {
+    font-family: var(--font-mono); font-size: 9px;
+    background: var(--layer2); padding: 2px 7px; border-radius: 99px;
+    color: var(--text-3);
+  }
+  .done-list { display: none; }
+  .done-list.open { display: block; }
+  .done-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 0; border-bottom: 1px solid var(--line);
+    opacity: 0.38;
+  }
+  .done-row .task-title {
+    text-decoration: line-through; color: var(--text-2);
+  }
+</style>
+
+<!-- Sticky add form -->
+<form class="add-form" id="add-form" onsubmit="addTask(event)">
+  <input type="text" id="new-task-input"
+         placeholder="What are you working on?" maxlength="120" autocomplete="off"/>
+  <button type="submit">Add</button>
+</form>
+
+<div style="position:relative;z-index:1;">
+
+  <!-- Active tasks -->
+  <div id="active-list" style="margin:0 20px;border-top:1px solid var(--line);">
+    {% for task in active %}
+    <div class="task-row" style="--i:{{ loop.index0 }};" data-task-id="{{ task.id }}" id="task-{{ task.id }}">
+      <div class="task-check" onclick="doneTask({{ task.id }})" aria-label="Complete task">
+        <svg width="10" height="10" fill="none" stroke="var(--session)" stroke-width="3"
+             stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"
+             style="opacity:0;transition:opacity 0.15s;">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </div>
+      <span class="task-title">{{ task.title }}</span>
+      {% if task.completed > 0 %}
+      <span class="pomodoro-badge">{{ task.completed }} 🍅</span>
+      {% endif %}
+      <button class="task-del" onclick="deleteTask({{ task.id }})" aria-label="Delete task">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" viewBox="0 0 24 24">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    {% endfor %}
+
+    {% if not active %}
+    <div class="empty" style="padding:48px 0;">
+      <div style="font-size:36px;margin-bottom:14px;opacity:0.25;">✓</div>
+      Nothing to do — <a href="/">start a session →</a>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Hover state for check boxes -->
+  <style>
+    .task-check:hover svg { opacity: 0.4; }
+  </style>
+
+  <!-- Done tasks -->
+  {% if done %}
+  <div>
+    <div class="done-header" onclick="this.nextElementSibling.classList.toggle('open')">
+      <span>Completed</span>
+      <span class="count">{{ done|length }}</span>
+    </div>
+    <div class="done-list" style="margin:0 20px;">
+      {% for task in done %}
+      <div class="done-row" style="--i:{{ loop.index0 }};">
+        <div style="width:22px;height:22px;border-radius:6px;
+          background:var(--layer2);border:1px solid var(--line);
+          display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="10" height="10" fill="none" stroke="var(--session)" stroke-width="3"
+               stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </div>
+        <span class="task-title">{{ task.title }}</span>
+        {% if task.completed > 0 %}
+        <span style="font-family:var(--font-mono);font-size:10px;color:var(--text-3);">
+          {{ task.completed }} 🍅
+        </span>
+        {% endif %}
+        <form method="post" action="/api/tasks/{{ task.id }}" style="display:none;" id="del-done-{{ task.id }}"></form>
+        <button class="task-del" onclick="deleteDoneTask({{ task.id }})" aria-label="Delete">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" viewBox="0 0 24 24">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+
+<div style="height:20px;"></div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/tasks.js"></script>
+{% endblock %}
