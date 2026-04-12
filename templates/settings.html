@@ -178,7 +178,7 @@ document.getElementById('settings-form').addEventListener('submit', async (e) =>
   };
   try {
     await fetch('/api/settings', {
-      method: 'POST',
+      method: 'PATCH',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(data),
     });

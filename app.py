@@ -18,7 +18,7 @@ def teardown_db(exc):
 def timer():
     settings = get_db().execute('SELECT * FROM settings WHERE id=1').fetchone()
     active_tasks = get_db().execute(
-        'SELECT * FROM tasks WHERE done=0 ORDER BY created_at ASC'
+        'SELECT * FROM tasks WHERE done=0 ORDER BY created_at DESC'
     ).fetchall()
     return render_template('timer.html', settings=settings, tasks=active_tasks)
 
@@ -27,7 +27,7 @@ def timer():
 def tasks():
     db = get_db()
     active = db.execute(
-        'SELECT * FROM tasks WHERE done=0 ORDER BY created_at ASC'
+        'SELECT * FROM tasks WHERE done=0 ORDER BY created_at DESC'
     ).fetchall()
     done = db.execute(
         'SELECT * FROM tasks WHERE done=1 ORDER BY done_at DESC LIMIT 30'
@@ -71,12 +71,15 @@ def history():
         for i in range(6, -1, -1)
     ]
 
+    max_count = max((d['count'] for d in heatmap_7), default=1) or 1
+
     return render_template('history.html',
         today_count=today_count,
         total_minutes=total_minutes,
         streak=streak,
         days=days,
-        heatmap_7=heatmap_7)
+        heatmap_7=heatmap_7,
+        max_count=max_count)
 
 
 @app.route('/settings')
@@ -126,7 +129,7 @@ def get_stats():
 @app.route('/api/tasks', methods=['GET'])
 def get_tasks():
     rows = get_db().execute(
-        'SELECT * FROM tasks WHERE done=0 ORDER BY created_at ASC'
+        'SELECT * FROM tasks WHERE done=0 ORDER BY created_at DESC'
     ).fetchall()
     return jsonify([dict(r) for r in rows])
 
@@ -151,9 +154,18 @@ def update_task(task_id):
     if data.get('done'):
         db.execute("UPDATE tasks SET done=1,done_at=datetime('now') WHERE id=?", (task_id,))
     if 'completed' in data:
-        db.execute('UPDATE tasks SET completed=? WHERE id=?', (int(data['completed']), task_id))
+        try:
+            completed = int(data['completed'])
+        except (ValueError, TypeError):
+            return jsonify({'error': 'invalid completed value'}), 400
+        db.execute('UPDATE tasks SET completed=? WHERE id=?', (completed, task_id))
     if 'title' in data:
-        db.execute('UPDATE tasks SET title=? WHERE id=?', (data['title'].strip(), task_id))
+        title = (data.get('title') or '').strip()
+        if not title:
+            return jsonify({'error': 'title cannot be empty'}), 400
+        if len(title) > 120:
+            return jsonify({'error': 'title too long (max 120 chars)'}), 400
+        db.execute('UPDATE tasks SET title=? WHERE id=?', (title, task_id))
     db.commit()
     row = db.execute('SELECT * FROM tasks WHERE id=?', (task_id,)).fetchone()
     return jsonify(dict(row) if row else {})
@@ -175,9 +187,26 @@ def get_settings_api():
     return jsonify(dict(row))
 
 
-@app.route('/api/settings', methods=['POST'])
+@app.route('/api/settings', methods=['PATCH'])
 def save_settings_api():
     data = request.get_json(force=True)
+    try:
+        work_duration       = int(data.get('work_duration', 1500))
+        short_break         = int(data.get('short_break', 300))
+        long_break          = int(data.get('long_break', 900))
+        long_break_interval = int(data.get('long_break_interval', 4))
+    except (ValueError, TypeError):
+        return jsonify({'error': 'invalid numeric value'}), 400
+
+    if not (300 <= work_duration <= 3600):
+        return jsonify({'error': 'work_duration out of range (300–3600)'}), 400
+    if not (60 <= short_break <= 900):
+        return jsonify({'error': 'short_break out of range (60–900)'}), 400
+    if not (300 <= long_break <= 1800):
+        return jsonify({'error': 'long_break out of range (300–1800)'}), 400
+    if not (2 <= long_break_interval <= 6):
+        return jsonify({'error': 'long_break_interval out of range (2–6)'}), 400
+
     db = get_db()
     db.execute("""
         UPDATE settings SET
@@ -186,10 +215,7 @@ def save_settings_api():
             sound_enabled=?, notification_enabled=?
         WHERE id=1
     """, (
-        int(data.get('work_duration', 1500)),
-        int(data.get('short_break', 300)),
-        int(data.get('long_break', 900)),
-        int(data.get('long_break_interval', 4)),
+        work_duration, short_break, long_break, long_break_interval,
         1 if data.get('auto_start_breaks') else 0,
         1 if data.get('auto_start_work') else 0,
         1 if data.get('sound_enabled', True) else 0,
