@@ -517,6 +517,22 @@ async function init() {
         if (document.hidden && timerState === 'running') snapshotState();
     });
 
+    // Control buttons
+    const resetBtn = el('reset-btn');
+    if (resetBtn) resetBtn.addEventListener('click', resetTimer);
+    const skipBtn = el('skip-btn');
+    if (skipBtn) skipBtn.addEventListener('click', skipTimer);
+
+    // Task chip → open picker
+    const chip = el('task-chip');
+    if (chip) chip.addEventListener('click', () => el('task-picker')?.classList.add('open'));
+
+    // Picker backdrop → close
+    const picker = el('task-picker');
+    if (picker) picker.addEventListener('click', e => {
+        if (e.target === picker) picker.classList.remove('open');
+    });
+
     // Focus mode button
     const focusBtn = el('focus-toggle-btn');
     if (focusBtn) focusBtn.addEventListener('click', toggleFocusMode);
@@ -525,7 +541,14 @@ async function init() {
     document.addEventListener('keydown', e => {
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
         if (e.key === ' ') { e.preventDefault(); window.togglePlayPause(); }
-        if (e.key === 'Escape' && document.body.classList.contains('focus-mode')) toggleFocusMode();
+        if (e.key === 'Escape') {
+            const pickerEl = el('task-picker');
+            if (pickerEl?.classList.contains('open')) {
+                pickerEl.classList.remove('open');
+            } else if (document.body.classList.contains('focus-mode')) {
+                toggleFocusMode();
+            }
+        }
         if (e.key === 'r' || e.key === 'R') resetTimer();
     });
 

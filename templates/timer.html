@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% block title %}Timer — FocusFlow{% endblock %}
 {% block content %}
 
 <style>
@@ -57,9 +58,10 @@
   /* Task chip inside ring */
   .task-chip {
     display: flex; align-items: center; gap: 6px;
-    padding: 5px 12px; border-radius: 99px;
+    padding: 8px 14px; border-radius: 99px;
     background: var(--layer2); border: 1px solid var(--line);
     cursor: pointer; max-width: 180px;
+    min-height: 44px;
     transition: border-color 0.2s;
     -webkit-tap-highlight-color: transparent;
   }
@@ -102,12 +104,13 @@
 
   /* ── Focus mode button ── */
   .focus-toggle {
-    margin-top: 28px;
+    margin-top: 20px;
     background: none; border: none; cursor: pointer;
     font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
     text-transform: uppercase; color: var(--text-3);
     display: flex; align-items: center; gap: 6px;
-    padding: 8px 12px; border-radius: var(--r-xs);
+    padding: 14px 16px; border-radius: var(--r-xs);
+    min-height: 44px;
     transition: color 0.2s;
     -webkit-tap-highlight-color: transparent;
     animation: fadeUp 0.5s ease 0.16s both;
@@ -153,7 +156,7 @@
   }
   .picker-item {
     display: flex; align-items: center; gap: 12px;
-    padding: 14px 20px; cursor: pointer;
+    padding: 14px 20px; cursor: pointer; min-height: 44px;
     -webkit-tap-highlight-color: transparent;
     transition: background 0.15s;
   }
@@ -183,15 +186,14 @@
 
 <div class="timer-main">
 
-  <!-- Mode label -->
-  <div class="session-label" id="mode-label">WORK · 1 OF 4</div>
+  <!-- Mode label — server-rendered to avoid flash -->
+  <div class="session-label" id="mode-label">WORK · 1 OF {{ settings.long_break_interval }}</div>
 
-  <!-- Cycle progress dots -->
+  <!-- Cycle progress dots — server-rendered from settings -->
   <div class="cycle-dots" id="cycle-dots">
-    <div class="cycle-dot" data-index="0"></div>
-    <div class="cycle-dot" data-index="1"></div>
-    <div class="cycle-dot" data-index="2"></div>
-    <div class="cycle-dot" data-index="3"></div>
+    {% for i in range(settings.long_break_interval) %}
+    <div class="cycle-dot" data-index="{{ i }}"></div>
+    {% endfor %}
   </div>
 
   <!-- Progress ring -->
@@ -217,10 +219,9 @@
     </svg>
 
     <div class="ring-center">
-      <div id="timer-display">25:00</div>
-      <button class="task-chip" id="task-chip"
-              onclick="document.getElementById('task-picker').classList.add('open')"
-              aria-label="Select task">
+      <!-- Timer display — server-rendered to avoid flash -->
+      <div id="timer-display">{{ '%02d:%02d' | format(settings.work_duration // 60, settings.work_duration % 60) }}</div>
+      <button class="task-chip" id="task-chip" aria-label="Select task">
         <div class="task-chip-dot"></div>
         <span id="task-chip-text">No task</span>
       </button>
@@ -229,23 +230,20 @@
 
   <!-- Controls -->
   <div class="controls">
-    <!-- Skip back / Reset -->
-    <button class="ctrl-btn" onclick="resetTimer()" aria-label="Reset">
+    <button class="ctrl-btn" id="reset-btn" aria-label="Reset">
       <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"
            stroke-linecap="round" viewBox="0 0 24 24">
         <path d="M3 12a9 9 0 109-9M3 12V7m0 5H8"/>
       </svg>
     </button>
 
-    <!-- Play / Pause -->
-    <button id="play-pause-btn" onclick="togglePlayPause()" aria-label="Play or pause">
+    <button id="play-pause-btn" aria-label="Start">
       <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24">
         <polygon points="5,3 19,12 5,21"/>
       </svg>
     </button>
 
-    <!-- Skip forward -->
-    <button class="ctrl-btn" onclick="skipTimer()" aria-label="Skip">
+    <button class="ctrl-btn" id="skip-btn" aria-label="Skip">
       <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"
            stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
         <path d="M5 4l10 8-10 8V4z"/><line x1="19" y1="5" x2="19" y2="19"/>
@@ -265,8 +263,7 @@
 </div>
 
 <!-- Task picker sheet -->
-<div id="task-picker" class="picker-overlay"
-     onclick="if(event.target===this)this.classList.remove('open')">
+<div id="task-picker" class="picker-overlay">
   <div class="picker-sheet">
     <div class="picker-handle"></div>
     <div class="picker-header">Focus on…</div>
