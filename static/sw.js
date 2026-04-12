@@ -1,5 +1,10 @@
-const CACHE = 'focusflow-v1';
-const SHELL = ['/', '/tasks', '/history', '/settings'];
+const CACHE = 'focusflow-v2';
+const SHELL = [
+  '/', '/tasks', '/history', '/settings',
+  '/static/css/app.css',
+  '/static/js/timer.js',
+  '/static/js/tasks.js',
+];
 
 self.addEventListener('install', e => {
   e.waitUntil(
@@ -18,7 +23,6 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // API requests: network only
   if (e.request.url.includes('/api/')) {
     e.respondWith(
       fetch(e.request).catch(() =>
@@ -28,7 +32,6 @@ self.addEventListener('fetch', e => {
     );
     return;
   }
-  // Shell: cache first, fall back to network
   e.respondWith(
     caches.match(e.request).then(r => r || fetch(e.request))
   );
