@@ -241,6 +241,16 @@ window.togglePlayPause = function() {
 window.resetTimer  = resetTimer;
 window.skipTimer   = skipTimer;
 
+function toggleFocusMode() {
+    document.body.classList.toggle('focus-mode');
+    const active = document.body.classList.contains('focus-mode');
+    const btn = el('focus-toggle-btn');
+    if (btn) btn.setAttribute('aria-label', active ? 'Exit focus mode' : 'Enter focus mode');
+    const lbl = el('focus-toggle-label');
+    if (lbl) lbl.textContent = active ? 'Exit focus' : 'Focus mode';
+}
+window.toggleFocusMode = toggleFocusMode;
+
 // ── Tick ──────────────────────────────────────────────────────
 function tick() {
     if (timerState !== 'running') return;
@@ -433,10 +443,33 @@ function restoreSnapshot() {
         const raw = sessionStorage.getItem('timerSnap');
         if (!raw) return false;
         const s = JSON.parse(raw);
-        // Adjust for time elapsed while away
         const elapsed = Math.floor((Date.now() - s.capturedAt) / 1000);
         const adjusted = s.remainingSeconds - elapsed;
-        if (adjusted <= 0) { sessionStorage.removeItem('timerSnap'); return false; }
+
+        sessionStorage.removeItem('timerSnap');
+
+        if (adjusted <= 0) {
+            // Timer completed while tab was hidden — record the session
+            mode               = s.mode;
+            totalSeconds       = s.totalSeconds;
+            completedPomodoros = s.completedPomodoros;
+            activeTaskId       = s.activeTaskId;
+            startedAt          = s.startedAt;
+
+            postSession(s.mode, true);
+
+            if (s.mode === 'work') {
+                completedPomodoros++;
+                if (activeTaskId) patchTaskPomodoro(activeTaskId);
+                const nextMode = (completedPomodoros % settings.long_break_interval === 0)
+                    ? 'long_break' : 'short_break';
+                setMode(nextMode);
+            } else {
+                setMode('work');
+            }
+            updatePlayPauseBtn();
+            return false;
+        }
 
         mode               = s.mode;
         totalSeconds       = s.totalSeconds;
@@ -450,7 +483,6 @@ function restoreSnapshot() {
         updateCycleDots();
         updateDisplay();
 
-        // Resume
         timerState = 'running';
         updatePlayPauseBtn();
         const ring = el('timer-ring');
@@ -485,11 +517,15 @@ async function init() {
         if (document.hidden && timerState === 'running') snapshotState();
     });
 
+    // Focus mode button
+    const focusBtn = el('focus-toggle-btn');
+    if (focusBtn) focusBtn.addEventListener('click', toggleFocusMode);
+
     // Keyboard shortcuts
     document.addEventListener('keydown', e => {
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
         if (e.key === ' ') { e.preventDefault(); window.togglePlayPause(); }
-        if (e.key === 'Escape') document.body.classList.remove('focus-mode');
+        if (e.key === 'Escape' && document.body.classList.contains('focus-mode')) toggleFocusMode();
         if (e.key === 'r' || e.key === 'R') resetTimer();
     });
 
