@@ -2,6 +2,11 @@
 {% block content %}
 
 <style>
+  /* ── Stat cards ── */
+  .stat-grid {
+    display: grid; grid-template-columns: repeat(3,1fr); gap: 8px;
+    padding: 0 20px; animation: fadeUp 0.4s ease 0.04s both;
+  }
   .stat-card {
     background: var(--layer1); border: 1px solid var(--line);
     border-radius: 14px; padding: 18px 16px;
@@ -24,16 +29,59 @@
     font-size: 11px; color: var(--text-3); margin-top: 4px;
     font-weight: 600; letter-spacing: 0.04em;
   }
+
+  /* ── Bar chart ── */
+  .bar-chart-wrap {
+    padding: 0 20px; animation: fadeUp 0.4s ease 0.1s both;
+  }
+  .bar-chart-container {
+    background: var(--layer1); border: 1px solid var(--line);
+    border-radius: 14px; padding: 16px 16px 0;
+  }
+  .bar-chart {
+    display: flex; align-items: flex-end; gap: 6px; height: 80px;
+  }
+  .bar-col {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+  }
+  .bar-fill {
+    width: 100%; border-radius: 3px 3px 0 0;
+    background: var(--layer3); min-height: 3px;
+  }
+  .bar-fill.has-sessions {
+    background: var(--session);
+    box-shadow: 0 0 8px var(--session-dim);
+  }
+  .bar-label-row {
+    display: flex; gap: 6px; padding: 6px 0 12px;
+  }
+  .bar-label {
+    flex: 1; text-align: center;
+    font-family: var(--font-mono); font-size: 8px;
+    color: var(--text-3); letter-spacing: 0.04em;
+  }
+
+  /* ── Session log ── */
   .session-row {
     display: flex; align-items: center; gap: 10px;
     padding: 13px 0; border-bottom: 1px solid var(--line);
     animation: fadeUp 0.35s ease both;
     animation-delay: calc(var(--i, 0) * 40ms + 60ms);
   }
-  .heatmap-cell {
-    flex: 1; height: 44px; border-radius: 8px;
-    display: flex; flex-direction: column; align-items: center;
-    justify-content: center; gap: 3px;
+  .session-dot {
+    width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+    background: var(--session); box-shadow: 0 0 6px var(--session);
+  }
+  .session-date {
+    flex: 1; font-family: var(--font-mono); font-size: 12px;
+    color: var(--text-2); font-weight: 700;
+  }
+  .session-tomatoes {
+    font-family: var(--font-mono); font-size: 11px;
+    font-weight: 700; color: var(--session);
+  }
+  .session-minutes {
+    font-size: 10px; color: var(--text-3); font-weight: 600;
   }
 </style>
 
@@ -42,50 +90,43 @@
 </div>
 
 <!-- Stat cards -->
-<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;
-  padding:0 20px;animation:fadeUp 0.4s ease 0.04s both;">
-
+<div class="stat-grid">
   <div class="stat-card">
     <div class="stat-card-label">Today</div>
     <div class="stat-card-value">{{ today_count }}</div>
     <div class="stat-card-unit">sessions</div>
   </div>
-
   <div class="stat-card">
     <div class="stat-card-label">Focus time</div>
     <div class="stat-card-value">{{ total_minutes }}</div>
-    <div class="stat-card-unit">minutes</div>
+    <div class="stat-card-unit">minutes total</div>
   </div>
-
   <div class="stat-card">
     <div class="stat-card-label">Streak</div>
     <div class="stat-card-value">{{ streak }}</div>
     <div class="stat-card-unit">{% if streak == 1 %}day{% else %}days{% endif %}</div>
   </div>
-
 </div>
 
-<!-- Week heatmap -->
+<!-- 7-day bar chart -->
 <div class="section-label" style="animation:fadeUp 0.4s ease 0.08s both;">This week</div>
 
-<div style="padding:0 20px;animation:fadeUp 0.4s ease 0.1s both;">
-  <div style="background:var(--layer1);border:1px solid var(--line);
-    border-radius:14px;padding:16px;">
-    <div style="display:flex;gap:4px;">
+<div class="bar-chart-wrap">
+  <div class="bar-chart-container">
+    <div class="bar-chart">
       {% for day in heatmap_7 %}
-      {% set intensity = [day.count, 4]|min %}
-      <div class="heatmap-cell"
-           style="background:{% if day.count > 0 %}rgba(120,32,255,{{ 0.2 + intensity * 0.2 }}){% else %}var(--layer3){% endif %};
-             {% if day.count > 0 %}box-shadow:0 0 8px rgba(120,32,255,0.2);{% endif %}"
-           title="{{ day.date }}: {{ day.count }} sessions">
-        <span style="font-family:var(--font-mono);font-size:8px;color:var(--text-3);letter-spacing:0.04em;">
-          {{ day.date[-5:] }}
-        </span>
-        {% if day.count > 0 %}
-        <span style="font-family:var(--font-mono);font-size:12px;font-weight:700;
-          color:var(--session);">{{ day.count }}</span>
-        {% endif %}
+      {% set height_pct = ((day.count / max_count) * 100)|int if max_count > 0 else 0 %}
+      <div class="bar-col">
+        <div class="bar-fill {% if day.count > 0 %}has-sessions{% endif %}"
+             style="height:{{ [height_pct, 3]|max }}%;"
+             title="{{ day.date }}: {{ day.count }} session{{ 's' if day.count != 1 else '' }}">
+        </div>
       </div>
+      {% endfor %}
+    </div>
+    <div class="bar-label-row">
+      {% for day in heatmap_7 %}
+      <div class="bar-label">{{ day.date[-5:] }}</div>
       {% endfor %}
     </div>
   </div>
@@ -98,20 +139,14 @@
   {% if days %}
     {% for day in days %}
     {% if day.pomodoros > 0 %}
+    {% set mins = day.work_seconds // 60 %}
     <div class="session-row" style="--i:{{ loop.index0 }};">
-      <div style="width:7px;height:7px;border-radius:50%;flex-shrink:0;
-        background:var(--session);box-shadow:0 0 6px var(--session);"></div>
-      <div style="flex:1;">
-        <div style="font-family:var(--font-mono);font-size:12px;
-          color:var(--text-2);font-weight:700;">{{ day.day }}</div>
-      </div>
+      <div class="session-dot"></div>
+      <div class="session-date">{{ day.day }}</div>
       <div style="display:flex;align-items:center;gap:8px;">
-        <span style="font-family:var(--font-mono);font-size:11px;
-          font-weight:700;color:var(--session);">
-          {{ day.pomodoros }} 🍅
-        </span>
-        <span style="font-size:10px;color:var(--text-3);font-weight:600;">
-          {{ day.work_seconds // 60 }}m
+        <span class="session-tomatoes">{{ day.pomodoros }} 🍅</span>
+        <span class="session-minutes">
+          {% if mins >= 60 %}{{ mins // 60 }}h {{ mins % 60 }}m{% else %}{{ mins }}m{% endif %}
         </span>
       </div>
     </div>
