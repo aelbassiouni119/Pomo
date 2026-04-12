@@ -82,10 +82,24 @@ async function deleteTask(taskId) {
 }
 
 async function deleteDoneTask(taskId) {
+    const row = document.getElementById(`done-${taskId}`);
+    if (!row) return;
+
+    row.style.transition = 'opacity 0.25s, transform 0.25s';
+    row.style.opacity = '0';
+    row.style.transform = 'translateX(24px)';
+
+    setTimeout(() => {
+        row.remove();
+        const doneList = document.querySelector('.done-list');
+        if (doneList && doneList.querySelectorAll('.done-row').length === 0) {
+            const section = doneList.closest('div');
+            if (section) section.style.display = 'none';
+        }
+    }, 260);
+
     try {
         await fetch(`/api/tasks/${taskId}`, {method: 'DELETE'});
-        // Reload page to refresh done list
-        location.reload();
     } catch (err) {}
 }
 
