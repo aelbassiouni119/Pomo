@@ -6,9 +6,12 @@ CREATE TABLE IF NOT EXISTS tasks (
     done            INTEGER DEFAULT 0,
     created_at      TEXT DEFAULT (datetime('now')),
     done_at         TEXT,
+    -- Task recurrence: 'none' (one-time), 'daily', or 'weekly'
     recurrence      TEXT DEFAULT 'none',
+    -- Last date this recurring task was reset (only populated for recurring tasks)
     last_reset_date TEXT,
-    task_type       TEXT DEFAULT 'work'
+    -- Task type: 'work' (default) or other categories for future use
+    task_type       TEXT NOT NULL DEFAULT 'work'
 );
 
 CREATE TABLE IF NOT EXISTS sessions (
