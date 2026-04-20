@@ -156,18 +156,22 @@ def get_tasks_today():
                     (today, task_dict['id'])
                 )
         elif recurrence == 'weekly':
-            # Reset every Monday or on first occurrence of week
+            # Calculate Monday of current week (weekday() returns 0=Monday, 6=Sunday)
             week_start = (date.today() - timedelta(days=date.today().weekday())).isoformat()
             last_reset = task_dict.get('last_reset_date')
             if not last_reset or last_reset < week_start:
-                # Reset task for this week
+                # Reset task for this week, storing the Monday date for next week's comparison
                 db.execute(
                     "UPDATE tasks SET done=0, last_reset_date=? WHERE id=?",
-                    (today, task_dict['id'])
+                    (week_start, task_dict['id'])
                 )
         # 'none' tasks never auto-reset
 
-    db.commit()
+    try:
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        return jsonify({'error': 'Database error during reset'}), 500
 
     # Fetch updated tasks
     rows = db.execute(
