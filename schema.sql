@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS sessions (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     task_id     INTEGER,
     type        TEXT NOT NULL CHECK(type IN ('work','short_break','long_break')),
+    mode        TEXT DEFAULT 'focus' CHECK(mode IN ('focus','fun')),
     duration    INTEGER NOT NULL,
     planned     INTEGER NOT NULL,
     completed   INTEGER DEFAULT 1,
