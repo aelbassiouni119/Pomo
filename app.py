@@ -134,14 +134,66 @@ def get_tasks():
     return jsonify([dict(r) for r in rows])
 
 
+@app.route('/api/tasks/today', methods=['GET'])
+def get_tasks_today():
+    """Return active tasks for today, auto-resetting daily/weekly recurring tasks."""
+    db = get_db()
+    today = date.today().isoformat()
+
+    # Fetch all non-deleted active tasks
+    tasks = db.execute('SELECT * FROM tasks WHERE done=0').fetchall()
+
+    for task in tasks:
+        task_dict = dict(task)
+        recurrence = task_dict.get('recurrence', 'none')
+
+        if recurrence == 'daily':
+            last_reset = task_dict.get('last_reset_date')
+            if last_reset != today:
+                # Reset task for today
+                db.execute(
+                    "UPDATE tasks SET done=0, last_reset_date=? WHERE id=?",
+                    (today, task_dict['id'])
+                )
+        elif recurrence == 'weekly':
+            # Reset every Monday or on first occurrence of week
+            week_start = (date.today() - timedelta(days=date.today().weekday())).isoformat()
+            last_reset = task_dict.get('last_reset_date')
+            if not last_reset or last_reset < week_start:
+                # Reset task for this week
+                db.execute(
+                    "UPDATE tasks SET done=0, last_reset_date=? WHERE id=?",
+                    (today, task_dict['id'])
+                )
+        # 'none' tasks never auto-reset
+
+    db.commit()
+
+    # Fetch updated tasks
+    rows = db.execute(
+        'SELECT * FROM tasks WHERE done=0 ORDER BY created_at DESC'
+    ).fetchall()
+    return jsonify([dict(r) for r in rows])
+
+
 @app.route('/api/tasks', methods=['POST'])
 def create_task():
     data = request.get_json(force=True)
     title = (data.get('title') or '').strip()
+    recurrence = data.get('recurrence', 'none')
+
     if not title:
         return jsonify({'error': 'title required'}), 400
+
+    if recurrence not in ['none', 'daily', 'weekly']:
+        return jsonify({'error': 'Invalid recurrence'}), 400
+
     db = get_db()
-    cur = db.execute('INSERT INTO tasks (title) VALUES (?)', (title,))
+    last_reset_date = date.today().isoformat() if recurrence != 'none' else None
+    cur = db.execute(
+        'INSERT INTO tasks (title, recurrence, last_reset_date) VALUES (?, ?, ?)',
+        (title, recurrence, last_reset_date)
+    )
     db.commit()
     row = db.execute('SELECT * FROM tasks WHERE id=?', (cur.lastrowid,)).fetchone()
     return jsonify(dict(row)), 201
