@@ -1,11 +1,14 @@
 CREATE TABLE IF NOT EXISTS tasks (
-    id          INTEGER PRIMARY KEY AUTOINCREMENT,
-    title       TEXT NOT NULL,
-    estimated   INTEGER DEFAULT 1,
-    completed   INTEGER DEFAULT 0,
-    done        INTEGER DEFAULT 0,
-    created_at  TEXT DEFAULT (datetime('now')),
-    done_at     TEXT
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    title           TEXT NOT NULL,
+    estimated       INTEGER DEFAULT 1,
+    completed       INTEGER DEFAULT 0,
+    done            INTEGER DEFAULT 0,
+    created_at      TEXT DEFAULT (datetime('now')),
+    done_at         TEXT,
+    recurrence      TEXT DEFAULT 'none',
+    last_reset_date TEXT,
+    task_type       TEXT DEFAULT 'work'
 );
 
 CREATE TABLE IF NOT EXISTS sessions (
