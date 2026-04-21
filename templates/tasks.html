@@ -33,6 +33,10 @@
     color: var(--session); background: var(--session-dim);
     padding: 3px 8px; border-radius: 99px; flex-shrink: 0;
   }
+  .recurrence-badge {
+    font-size: 9px; color: var(--text-3); background: var(--layer2);
+    padding: 3px 6px; border-radius: 99px; flex-shrink: 0;
+  }
   .task-del {
     background: none; border: none; cursor: pointer;
     color: var(--text-3); padding: 15px;
@@ -60,6 +64,17 @@
     box-shadow: 0 0 0 3px var(--session-dim);
   }
   .add-form input::placeholder { color: var(--text-3); }
+  .add-form select {
+    background: var(--layer2); border: 1px solid var(--line);
+    color: var(--text-1); border-radius: var(--r-sm);
+    padding: 12px 10px; font-size: 13px; font-family: var(--font-ui);
+    outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+    flex-shrink: 0; cursor: pointer;
+  }
+  .add-form select:focus {
+    border-color: var(--session);
+    box-shadow: 0 0 0 3px var(--session-dim);
+  }
   .add-form button {
     background: var(--session); border: none; color: #fff;
     border-radius: var(--r-sm); padding: 12px 18px;
@@ -103,6 +118,11 @@
 <form class="add-form" id="add-form" onsubmit="addTask(event)">
   <input type="text" id="new-task-input"
          placeholder="What are you working on?" maxlength="120" autocomplete="off"/>
+  <select id="recurrence-select">
+    <option value="none">One-time</option>
+    <option value="daily">Daily</option>
+    <option value="weekly">Weekly</option>
+  </select>
   <button type="submit">Add</button>
 </form>
 
@@ -122,6 +142,9 @@
       <span class="task-title">{{ task.title }}</span>
       {% if task.completed > 0 %}
       <span class="pomodoro-badge">{{ task.completed }} 🍅</span>
+      {% endif %}
+      {% if task.recurrence and task.recurrence != 'none' %}
+      <span class="recurrence-badge">{{ task.recurrence }}</span>
       {% endif %}
       <button class="task-del" onclick="deleteTask({{ task.id }})" aria-label="Delete task">
         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"

@@ -3,15 +3,19 @@
 async function addTask(e) {
     e.preventDefault();
     const input = document.getElementById('new-task-input');
+    const recurrenceSelect = document.getElementById('recurrence-select');
     const title = input.value.trim();
+    const recurrence = recurrenceSelect.value;
+
     if (!title) return;
     input.value = '';
+    recurrenceSelect.value = 'none';
 
     try {
         const resp = await fetch('/api/tasks', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({title}),
+            body: JSON.stringify({title, recurrence}),
         });
         const task = await resp.json();
         if (task.id) prependTaskRow(task);
@@ -33,6 +37,11 @@ function prependTaskRow(task) {
     row.id = `task-${task.id}`;
     row.dataset.taskId = task.id;
     row.style.cssText = '--i:0;animation:fadeUp 0.35s ease both;';
+
+    const recurrenceBadge = task.recurrence && task.recurrence !== 'none'
+        ? `<span class="recurrence-badge">${task.recurrence}</span>`
+        : '';
+
     row.innerHTML = `
       <div class="task-check" onclick="doneTask(${task.id})" aria-label="Complete task">
         <svg width="10" height="10" fill="none" stroke="var(--session)" stroke-width="3"
@@ -42,6 +51,7 @@ function prependTaskRow(task) {
         </svg>
       </div>
       <span class="task-title">${escHtml(task.title)}</span>
+      ${recurrenceBadge}
       <button class="task-del" onclick="deleteTask(${task.id})" aria-label="Delete task">
         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
              stroke-linecap="round" viewBox="0 0 24 24">
