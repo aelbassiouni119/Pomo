@@ -203,7 +203,7 @@ input[type=range]::-webkit-slider-thumb:active { transform: scale(1.25); }
 .btn {
   display: flex; align-items: center; justify-content: center; gap: 8px;
   width: 100%; padding: 16px;
-  background: var(--session); color: #fff;
+  background: var(--session); color: var(--text-1);
   border: none; border-radius: var(--r-sm);
   font-size: 14px; font-weight: 700; font-family: var(--font-ui);
   cursor: pointer; text-decoration: none;
