@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% block title %}Stats — FocusFlow{% endblock %}
 {% block content %}
 
 <style>
@@ -43,11 +42,14 @@
     display: flex; align-items: flex-end; gap: 6px; height: 80px;
   }
   .bar-col {
-    flex: 1; display: flex; flex-direction: column; align-items: center;
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; gap: 0;
   }
   .bar-fill {
     width: 100%; border-radius: 3px 3px 0 0;
-    background: var(--layer3); min-height: 3px;
+    background: rgba(120,32,255,0.35);
+    transition: background 0.3s;
+    min-height: 3px;
   }
   .bar-fill.has-sessions {
     background: var(--session);
@@ -74,7 +76,8 @@
     background: var(--session); box-shadow: 0 0 6px var(--session);
   }
   .session-date {
-    flex: 1; font-family: var(--font-mono); font-size: 12px;
+    flex: 1;
+    font-family: var(--font-mono); font-size: 12px;
     color: var(--text-2); font-weight: 700;
   }
   .session-tomatoes {
@@ -100,7 +103,7 @@
   <div class="stat-card">
     <div class="stat-card-label">Focus time</div>
     <div class="stat-card-value">{{ total_minutes }}</div>
-    <div class="stat-card-unit">minutes total</div>
+    <div class="stat-card-unit">minutes</div>
   </div>
   <div class="stat-card">
     <div class="stat-card-label">Streak</div>
@@ -116,10 +119,10 @@
   <div class="bar-chart-container">
     <div class="bar-chart">
       {% for day in heatmap_7 %}
-      {% set height_pct = ((day.count / max_count) * 100)|int if max_count > 0 else 0 %}
+      {% set height_pct = (day.count / max_count * 100)|int if max_count > 0 else 0 %}
       <div class="bar-col">
         <div class="bar-fill {% if day.count > 0 %}has-sessions{% endif %}"
-             style="height:{{ [height_pct, 3]|max }}%;"
+             style="height:{{ height_pct if height_pct > 3 else 3 }}%;"
              title="{{ day.date }}: {{ day.count }} session{{ 's' if day.count != 1 else '' }}">
         </div>
       </div>
