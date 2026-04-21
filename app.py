@@ -23,6 +23,12 @@ def timer():
     return render_template('timer.html', settings=settings, tasks=active_tasks)
 
 
+@app.route('/clock')
+def clock():
+    """Display the dual-mode clock (focus/fun)."""
+    return render_template('clock.html')
+
+
 @app.route('/tasks')
 def tasks():
     db = get_db()

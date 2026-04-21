@@ -25,11 +25,11 @@
 {% block content %}{% endblock %}
 
 <nav class="nav" aria-label="Main navigation">
-  <a href="/" class="nav-item {% if request.path == '/' %}active{% endif %}">
+  <a href="/clock" class="nav-item {% if request.path == '/clock' %}active{% endif %}">
     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3" stroke-linecap="round"/>
     </svg>
-    Timer
+    Clock
   </a>
   <a href="/tasks" class="nav-item {% if request.path == '/tasks' %}active{% endif %}">
     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
