@@ -58,6 +58,7 @@
     color: var(--text-1); border-radius: var(--r-sm);
     padding: 12px 16px; font-size: 15px; font-family: var(--font-ui);
     outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+    min-width: 0;
   }
   .add-form input:focus {
     border-color: var(--session);
@@ -69,7 +70,7 @@
     color: var(--text-1); border-radius: var(--r-sm);
     padding: 12px 10px; font-size: 13px; font-family: var(--font-ui);
     outline: none; transition: border-color 0.2s, box-shadow 0.2s;
-    flex-shrink: 0; cursor: pointer;
+    flex-shrink: 0; cursor: pointer; min-width: 90px;
   }
   .add-form select:focus {
     border-color: var(--session);
@@ -84,8 +85,33 @@
     transition: opacity 0.15s, transform 0.12s;
     -webkit-tap-highlight-color: transparent;
     box-shadow: 0 0 16px var(--session-dim);
+    min-width: 60px;
   }
   .add-form button:active { opacity: 0.85; transform: scale(0.96); }
+
+  /* Mobile responsive form stacking */
+  @media (max-width: 420px) {
+    .add-form {
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 0 16px;
+    }
+    .add-form input {
+      flex: 1 1 100%;
+      order: 1;
+    }
+    .add-form select {
+      flex: 1 1 calc(50% - 4px);
+      order: 2;
+      min-width: unset;
+    }
+    .add-form button {
+      flex: 1 1 calc(50% - 4px);
+      order: 3;
+      min-width: unset;
+      padding: 12px 16px;
+    }
+  }
 
   /* Done section */
   .done-header {

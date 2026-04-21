@@ -233,3 +233,52 @@ input[type=range]::-webkit-slider-thumb:active { transform: scale(1.25); }
 
 body.focus-mode .nav,
 body.focus-mode .focus-hide { display: none !important; }
+
+/* ── Responsive Design Enhancements ── */
+
+/* Mode toggle buttons: ensure 44px minimum height for touch targets */
+@supports (padding: max(0px)) {
+  .mode-btn {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* Task form: responsive stacking on mobile */
+@media (max-width: 420px) {
+  .add-form {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .add-form input {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+  .add-form select,
+  .add-form button {
+    flex: 1 1 calc(50% - 4px);
+  }
+}
+
+/* Ring SVG: responsive scaling for smaller devices */
+@media (max-width: 480px) {
+  .ring-wrap {
+    width: 240px;
+    height: 240px;
+  }
+
+  .ring-wrap svg {
+    width: 100% !important;
+    height: 100% !important;
+  }
+}
+
+/* Ensure form elements don't cause horizontal scroll */
+@media (max-width: 390px) {
+  input[type=text],
+  select {
+    font-size: 16px;
+  }
+}

@@ -17,6 +17,7 @@
 
   .mode-btn {
     flex: 1;
+    min-height: 44px;
     padding: 14px 0;
     background: none;
     border: none;
@@ -29,6 +30,9 @@
     transition: color 0.3s, border-bottom 0.3s;
     border-bottom: 3px solid transparent;
     -webkit-tap-highlight-color: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .mode-btn.active {
@@ -54,6 +58,13 @@
     height: 260px;
     flex-shrink: 0;
     margin-top: 32px;
+  }
+
+  @media (max-width: 480px) {
+    .ring-wrap {
+      width: 240px;
+      height: 240px;
+    }
   }
 
   #timer-ring {
