@@ -2,6 +2,7 @@ import os
 from datetime import date, timedelta
 from flask import Flask, render_template, request, jsonify, send_from_directory
 from db import get_db, init_db, close_db
+from app.analytics import calculate_streak as calc_streak_analytics, get_focus_time_by_date, get_task_completion_rate
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'focusflow-dev-key')
@@ -288,6 +289,34 @@ def save_settings_api():
     ))
     db.commit()
     return jsonify({'ok': True})
+
+
+# ── API: Analytics ───────────────────────────────────────────
+
+@app.route('/api/stats/streak')
+def get_streak():
+    """Get current streak count."""
+    streak, last_date = calc_streak_analytics()
+    return jsonify({
+        'streak': streak,
+        'last_active': last_date if last_date else None
+    })
+
+
+@app.route('/api/stats/heatmap')
+def get_heatmap():
+    """Get focus time per day for heatmap visualization."""
+    days_back = request.args.get('days', 30, type=int)
+    data = get_focus_time_by_date(days_back)
+    return jsonify(data)
+
+
+@app.route('/api/stats/completion')
+def get_completion():
+    """Get task completion stats."""
+    days_back = request.args.get('days', 7, type=int)
+    stats = get_task_completion_rate(days_back)
+    return jsonify(stats)
 
 
 # ── PWA ───────────────────────────────────────────────────────
