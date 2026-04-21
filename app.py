@@ -89,6 +89,12 @@ def history():
         max_count=max_count)
 
 
+@app.route('/analytics')
+def analytics():
+    """Display analytics and progress page."""
+    return render_template('analytics.html')
+
+
 @app.route('/settings')
 def settings():
     s = get_db().execute('SELECT * FROM settings WHERE id=1').fetchone()

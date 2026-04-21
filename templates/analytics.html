@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Stats — FocusFlow{% endblock %}
+{% block content %}
+
+<style>
+  .analytics-page {
+    padding: max(52px, calc(env(safe-area-inset-top) + 44px)) 20px 20px;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .page-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-1);
+    margin-bottom: 32px;
+  }
+
+  .card {
+    background: var(--layer1);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    margin-bottom: 16px;
+    overflow: hidden;
+    animation: fadeUp 0.4s ease both;
+  }
+
+  .card-title {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    padding: 16px 20px 0;
+  }
+
+  @keyframes fadeUp {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+</style>
+
+<div class="analytics-page">
+  <div class="page-title">Progress</div>
+
+  <!-- Streak card -->
+  <div class="card">
+    <div class="card-title">Current Streak</div>
+    <div id="streak-container"></div>
+  </div>
+
+  <!-- Heatmap card -->
+  <div class="card">
+    <div class="card-title">Focus Time (Last 30 Days)</div>
+    <div id="heatmap-container"></div>
+  </div>
+
+  <!-- Completion stats card -->
+  <div class="card">
+    <div id="stats-container"></div>
+  </div>
+
+  <div style="height:20px;"></div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/analytics.js"></script>
+{% endblock %}
