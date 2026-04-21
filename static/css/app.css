@@ -3,17 +3,31 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg:        #06060a;
-  --layer1:    #0d0d14;
-  --layer2:    #13131e;
-  --layer3:    #1a1a28;
+  --bg:        #0a0a0f;
+  --layer1:    #1a1a24;
+  --layer2:    #25252f;
+  --layer3:    #35353f;
   --line:      rgba(255,255,255,0.06);
   --line-bright: rgba(255,255,255,0.12);
-  --text-1:    #f0f0fa;
-  --text-2:    #5a5a7a;
-  --text-3:    #28283a;
-  --accent:    #7820ff;
-  --accent-dim: rgba(120,32,255,0.15);
+  --text-1:    #ffffff;
+  --text-2:    #c4c4d0;
+  --text-3:    #7a7a8f;
+
+  /* Warm gradient for focus/work */
+  --accent-warm: #ff8c42;
+  --accent-warm-light: #ffb366;
+
+  /* Cool blue for fun/leisure */
+  --accent-cool: #42a5f5;
+  --accent-cool-light: #64b5f6;
+
+  /* Session color (dynamic, set by JS) */
+  --session:     #ff8c42;
+  --session-dim: rgba(255, 140, 66, 0.18);
+
+  /* Legacy accent for compatibility */
+  --accent:    #ff8c42;
+  --accent-dim: rgba(255, 140, 66, 0.15);
   --green:     #00ff88;
   --red:       #ff4060;
   --cyan:      #00c8ff;
@@ -22,8 +36,6 @@
   --r-card:    18px;
   --r-sm:      12px;
   --r-xs:      8px;
-  --session:     #7820ff;
-  --session-dim: rgba(120,32,255,0.18);
 }
 
 @keyframes fadeUp {
@@ -46,6 +58,11 @@
 @keyframes slideUp {
   from { transform: translateY(100%); }
   to   { transform: translateY(0); }
+}
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -89,9 +106,7 @@ body::before {
 
 .nav {
   position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
-  background: rgba(6,6,10,0.94);
-  backdrop-filter: saturate(200%) blur(28px);
-  -webkit-backdrop-filter: saturate(200%) blur(28px);
+  background: var(--layer1);
   border-top: 1px solid var(--line);
   display: flex;
   padding: 8px 8px max(16px, env(safe-area-inset-bottom));
@@ -114,9 +129,13 @@ body::before {
 .nav-item svg { width: 20px; height: 20px; stroke-width: 1.8; }
 
 .card {
-  background: var(--layer1);
+  background: linear-gradient(135deg, var(--layer1), var(--layer2));
+  background-size: 200% 200%;
   border: 1px solid var(--line);
   border-radius: var(--r-card);
+  /* Uncomment for animated gradient (optional):
+  animation: gradientShift 6s ease infinite;
+  */
 }
 
 .section-label {
@@ -178,7 +197,7 @@ input[type=range]::-webkit-slider-thumb:active { transform: scale(1.25); }
 }
 .toggle input:checked + .toggle-track { background: var(--session); }
 .toggle input:checked + .toggle-track::before {
-  transform: translateX(20px); background: #fff;
+  transform: translateX(20px); background: var(--text-1);
 }
 
 .btn {
