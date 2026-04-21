@@ -105,19 +105,25 @@ def settings():
 
 @app.route('/api/sessions', methods=['POST'])
 def create_session():
-    data = request.get_json(force=True)
-    db = get_db()
-    mode = data.get('mode', 'focus')
-    if mode not in ['focus', 'fun']:
-        mode = 'focus'
-    db.execute(
-        'INSERT INTO sessions (task_id,type,mode,duration,planned,completed,started_at) VALUES (?,?,?,?,?,?,?)',
-        (data.get('task_id'), data.get('type', 'work'), mode,
-         int(data.get('duration', 0)), int(data.get('planned', 0)),
-         1 if data.get('completed') else 0, data.get('started_at'))
-    )
-    db.commit()
-    return jsonify({'ok': True, 'mode': mode}), 201
+    try:
+        data = request.get_json(force=True)
+        if not data or 'started_at' not in data:
+            return jsonify({'error': 'Missing required field: started_at'}), 400
+        
+        db = get_db()
+        mode = data.get('mode', 'focus')
+        if mode not in ['focus', 'fun']:
+            mode = 'focus'
+        db.execute(
+            'INSERT INTO sessions (task_id,type,mode,duration,planned,completed,started_at) VALUES (?,?,?,?,?,?,?)',
+            (data.get('task_id'), data.get('type', 'work'), mode,
+             int(data.get('duration', 0)), int(data.get('planned', 0)),
+             1 if data.get('completed') else 0, data.get('started_at'))
+        )
+        db.commit()
+        return jsonify({'ok': True, 'mode': mode}), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
 
 
 @app.route('/api/sessions', methods=['GET'])
